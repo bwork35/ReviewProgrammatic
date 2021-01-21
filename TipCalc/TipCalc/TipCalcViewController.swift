@@ -13,11 +13,28 @@ class TipCalcViewController: UIViewController {
     var safeArea: UILayoutGuide {
         return self.view.safeAreaLayoutGuide
     }
+    var buttons: [UIButton] {
+        return [tenPercentButton, fifteenPercentButton, eighteenPercentButton, twentyPercentButton, customTipButton, roundUpButton, roundDownButton]
+    }
+    var tipButtons: [UIButton] {
+        return [tenPercentButton, fifteenPercentButton, eighteenPercentButton, twentyPercentButton, customTipButton]
+    }
+    var roundButtons: [UIButton] {
+        return [roundUpButton, roundDownButton]
+    }
+    var tipTotal: Double = 0.00
+    var finalTotal: Double = 0.00
 
     //MARK: - Lifecycles
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = #colorLiteral(red: 1, green: 0.9546431899, blue: 0.8718495965, alpha: 1)
+        activateButtons()
+        tipTotalStackView.isHidden = true
+        roundStackView.isHidden = true
+        
+        let tap = UITapGestureRecognizer(target: self.view, action: #selector(UIView.endEditing))
+        view.addGestureRecognizer(tap)
     }
     
     override func loadView() {
@@ -32,6 +49,95 @@ class TipCalcViewController: UIViewController {
     }
     
     //MARK: - Helper Methods
+    func activateButtons() {
+        buttons.forEach { $0.addTarget(self, action: #selector(selectButton(sender:)), for: .touchUpInside) }
+    }
+    
+    @objc func selectButton(sender: UIButton) {
+        switch sender {
+        case tenPercentButton:
+            highlightButton(button: sender)
+            customTipTextField.text = ""
+            calculate(tipPercent: 0.10)
+        case fifteenPercentButton:
+            highlightButton(button: sender)
+            customTipTextField.text = ""
+            calculate(tipPercent: 0.15)
+        case eighteenPercentButton:
+            highlightButton(button: sender)
+            customTipTextField.text = ""
+            calculate(tipPercent: 0.18)
+        case twentyPercentButton:
+            highlightButton(button: sender)
+            customTipTextField.text = ""
+            calculate(tipPercent: 0.20)
+        case customTipButton:
+            customTipTextField.resignFirstResponder()
+            guard let customTipText = customTipTextField.text, !customTipText.isEmpty else {return}
+            highlightButton(button: sender)
+            let customTip = (Double(customTipText) ?? 0.00) / 100
+            calculate(tipPercent: customTip)
+        case roundUpButton:
+            highlightRoundButton(button: sender)
+            roundUp()
+        case roundDownButton:
+            highlightRoundButton(button: sender)
+            roundDown()
+        default:
+            print("button")
+        }
+    }
+    
+    func calculate(tipPercent: Double) {
+        billTotalTextField.resignFirstResponder()
+        guard let billTotalText = billTotalTextField.text, !billTotalText.isEmpty else {return}
+        let billTotal = Double(billTotalText) ?? 0.00
+        tipTotal = billTotal * tipPercent
+        finalTotal = billTotal + tipTotal
+        tipTotalStackView.isHidden = false
+        tipLabel.text = "Tip:  $" + String(format: "%.2f", tipTotal)
+        totalLabel.text = "Total:  $" + String(format: "%.2f", finalTotal)
+        roundStackView.isHidden = false
+    }
+    
+    func highlightButton(button: UIButton) {
+        guard let billTotalText = billTotalTextField.text, !billTotalText.isEmpty else {return}
+        clearRoundButtons()
+        tipButtons.forEach( { $0.backgroundColor = .buttonBlue } )
+        button.backgroundColor = .cyan
+    }
+    
+    func highlightRoundButton(button: UIButton) {
+        roundButtons.forEach( { $0.backgroundColor = .buttonBlue } )
+        button.backgroundColor = .cyan
+    }
+    
+    func clearRoundButtons() {
+        roundButtons.forEach( { $0.backgroundColor = .buttonBlue } )
+    }
+    
+    func roundUp() {
+        let roundTotal = finalTotal.rounded(.up)
+        print(finalTotal)
+        print(roundTotal)
+        let difference = roundTotal - finalTotal
+        print(difference)
+        let roundTip = tipTotal + difference
+        tipLabel.text = "Tip:  $" + String(format: "%.2f", roundTip)
+        totalLabel.text = "Total:  $" + String(format: "%.2f", roundTotal)
+    }
+    
+    func roundDown() {
+        let roundTotal = finalTotal.rounded(.down)
+        print(finalTotal)
+        print(roundTotal)
+        let difference = finalTotal - roundTotal
+        print(difference)
+        let roundTip = tipTotal - difference
+        tipLabel.text = "Tip:  $" + String(format: "%.2f", roundTip)
+        totalLabel.text = "Total:  $" + String(format: "%.2f", roundTotal)
+    }
+    
     func addAllSubviews() {
         self.view.addSubview(titleLabel)
         self.view.addSubview(billTotalLabel)
@@ -119,6 +225,7 @@ class TipCalcViewController: UIViewController {
         textField.placeholder = "$0.00"
         textField.backgroundColor = .white
         textField.textAlignment = .right
+        textField.keyboardType = .decimalPad
         
         return textField
     }()
@@ -138,6 +245,7 @@ class TipCalcViewController: UIViewController {
         button.setTitle("10%", for: .normal)
         button.setTitleColor(.red, for: .normal)
         button.backgroundColor = .buttonBlue
+        button.addCornerRadius()
         
         return button
     }()
@@ -147,6 +255,7 @@ class TipCalcViewController: UIViewController {
         button.setTitle("15%", for: .normal)
         button.setTitleColor(.red, for: .normal)
         button.backgroundColor = .buttonBlue
+        button.addCornerRadius()
         
         return button
     }()
@@ -156,6 +265,7 @@ class TipCalcViewController: UIViewController {
         button.setTitle("18%", for: .normal)
         button.setTitleColor(.red, for: .normal)
         button.backgroundColor = .buttonBlue
+        button.addCornerRadius()
 
         return button
     }()
@@ -165,6 +275,7 @@ class TipCalcViewController: UIViewController {
         button.setTitle("20%", for: .normal)
         button.setTitleColor(.red, for: .normal)
         button.backgroundColor = .buttonBlue
+        button.addCornerRadius()
         
         return button
     }()
@@ -174,7 +285,7 @@ class TipCalcViewController: UIViewController {
         stackView.axis = .horizontal
         stackView.alignment = .fill
         stackView.distribution = .fillEqually
-        stackView.spacing = 20
+        stackView.spacing = 32
         
         return stackView
     }()
@@ -195,6 +306,7 @@ class TipCalcViewController: UIViewController {
         textField.placeholder = "0%"
         textField.backgroundColor = .white
         textField.textAlignment = .right
+        textField.keyboardType = .decimalPad
         
         return textField
     }()
@@ -204,6 +316,7 @@ class TipCalcViewController: UIViewController {
         button.setTitle("Calculate", for: .normal)
         button.setTitleColor(.red, for: .normal)
         button.backgroundColor = .buttonBlue
+        button.addCornerRadius()
         
         return button
     }()
@@ -255,6 +368,7 @@ class TipCalcViewController: UIViewController {
         button.setTitle("Round Up", for: .normal)
         button.setTitleColor(.brickRed, for: .normal)
         button.backgroundColor = .buttonBlue
+        button.addCornerRadius()
         
         return button
     }()
@@ -264,6 +378,7 @@ class TipCalcViewController: UIViewController {
         button.setTitle("Round Down", for: .normal)
         button.setTitleColor(.brickRed, for: .normal)
         button.backgroundColor = .buttonBlue
+        button.addCornerRadius()
         
         return button
     }()
