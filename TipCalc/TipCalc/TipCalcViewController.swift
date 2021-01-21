@@ -28,13 +28,8 @@ class TipCalcViewController: UIViewController {
     //MARK: - Lifecycles
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.view.backgroundColor = #colorLiteral(red: 1, green: 0.9546431899, blue: 0.8718495965, alpha: 1)
+        setupView()
         activateButtons()
-        tipTotalStackView.isHidden = true
-        roundStackView.isHidden = true
-        
-        let tap = UITapGestureRecognizer(target: self.view, action: #selector(UIView.endEditing))
-        view.addGestureRecognizer(tap)
     }
     
     override func loadView() {
@@ -49,6 +44,16 @@ class TipCalcViewController: UIViewController {
     }
     
     //MARK: - Helper Methods
+    func setupView() {
+        self.view.backgroundColor = #colorLiteral(red: 1, green: 0.9546431899, blue: 0.8718495965, alpha: 1)
+        tipTotalStackView.isHidden = true
+        roundStackView.isHidden = true
+        billTotalTextField.delegate = self
+        customTipTextField.delegate = self
+        let tap = UITapGestureRecognizer(target: self.view, action: #selector(UIView.endEditing))
+        view.addGestureRecognizer(tap)
+    }
+    
     func activateButtons() {
         buttons.forEach { $0.addTarget(self, action: #selector(selectButton(sender:)), for: .touchUpInside) }
     }
@@ -394,3 +399,9 @@ class TipCalcViewController: UIViewController {
     }()
 
 } //End of class
+
+extension TipCalcViewController: UITextFieldDelegate {
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        buttons.forEach({ $0.backgroundColor = .buttonBlue })
+    }
+}
