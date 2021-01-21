@@ -39,3 +39,9 @@ extension UIView {
     }
     
 } //End of extension
+
+extension UIView {
+    func addCornerRadius() {
+        self.layer.cornerRadius = 15.0
+    }
+} //Ed of extension
